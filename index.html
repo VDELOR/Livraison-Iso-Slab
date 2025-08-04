@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Livraison La Pêche</title>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC7lIug18kthgv4ZXOPz3x1lwXxepbphj8&libraries=places"></script>
+  <style>
+    body { font-family: sans-serif; background: #f4f4f4; padding: 2em; }
+    .container { background: #fff; padding: 2em; border-radius: 10px; max-width: 600px; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    input, button { padding: 0.75em; width: 100%; margin-top: 1em; font-size: 1em; }
+    .result { margin-top: 2em; font-size: 1.2em; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Calcul de Livraison</h1>
+    <input type="text" id="address" placeholder="Entrer l’adresse du client">
+    <button onclick="calculateDelivery()">Calculer</button>
+    <div class="result" id="result">Résultat affiché ici…</div>
+  </div>
+
+  <script>
+    const ORIGIN = "La Pêche, QC";
+    const PRICE_PER_KM = 3;
+    const FIXED_FEE = 50;
+
+    function calculateDelivery() {
+      const address = document.getElementById("address").value.trim();
+      if (!address) {
+        document.getElementById("result").innerText = "⚠️ Entrez une adresse valide.";
+        return;
+      }
+
+      const service = new google.maps.DistanceMatrixService();
+      service.getDistanceMatrix({
+        origins: [ORIGIN],
+        destinations: [address],
+        travelMode: 'DRIVING',
+        unitSystem: google.maps.UnitSystem.METRIC
+      }, (response, status) => {
+        if (status !== 'OK') {
+          document.getElementById("result").innerText = "Erreur Google Maps API.";
+          return;
+        }
+
+        const element = response.rows[0].elements[0];
+        if (element.status !== 'OK') {
+          document.getElementById("result").innerText = "⚠️ Adresse non valide ou introuvable.";
+          return;
+        }
+
+        const distanceMeters = element.distance.value;
+        const distanceKm = Math.ceil(distanceMeters / 1000);
+        const cost = (distanceKm * PRICE_PER_KM) + FIXED_FEE;
+
+        document.getElementById("result").innerHTML = `
+          🚗 Distance : <strong>${distanceKm} km</strong><br>
+          💰 Transport : ${distanceKm} × 3 $ = <strong>${distanceKm * PRICE_PER_KM} $</strong><br>
+          ➕ Frais fixes : <strong>50 $</strong><br><br>
+          🧾 <strong>Total : ${cost} $</strong>
+        `;
+      });
+    }
+  </script>
+</body>
+</html>
